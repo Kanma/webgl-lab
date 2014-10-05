@@ -1,0 +1,198 @@
+<html>
+
+<head>
+<title>WebGL Lab - Bump mapping</title>
+
+<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/gl-matrix-min.js"></script>
+<script type="text/javascript" src="js/gl-lab.js"></script>
+<script type="text/javascript" src="js/gl-lab.resources.js"></script>
+<script type="text/javascript" src="js/gl-lab.shaderprogram.js"></script>
+<script type="text/javascript" src="js/gl-lab.transforms.js"></script>
+<script type="text/javascript" src="js/gl-lab.color.js"></script>
+<script type="text/javascript" src="js/gl-lab.material.js"></script>
+<script type="text/javascript" src="js/gl-lab.submesh.js"></script>
+<script type="text/javascript" src="js/gl-lab.mesh.js"></script>
+<script type="text/javascript" src="js/gl-lab.camera.js"></script>
+<script type="text/javascript" src="js/gl-lab.object.js"></script>
+<script type="text/javascript" src="js/gl-lab.scene.js"></script>
+
+
+<script type="text/javascript">
+
+    var gl      = null;
+    var camera  = null;
+    var scene   = null;
+
+
+    function degToRad(degrees)
+    {
+        return degrees * Math.PI / 180;
+    }
+
+
+    function loadResources(callback)
+    {
+        // Shaders
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture_no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture_no_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors_no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors_no_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured_no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured_no_lighting.fs');
+
+        // Textures
+        gl_lab.resources.loadTexture(gl, 'data/textures/concrete_wall_A_diffuse.png');
+        gl_lab.resources.loadTexture(gl, 'data/textures/concrete_wall_A_normal.png');
+        gl_lab.resources.loadTexture(gl, 'data/textures/wooden_box_diffuse.png');
+        gl_lab.resources.loadTexture(gl, 'data/textures/wooden_box_normal.png');
+
+        // Meshes
+        gl_lab.resources.loadMesh(gl, 'data/meshes/colored_cube.json');
+        gl_lab.resources.loadMesh(gl, 'data/meshes/vertex_colored_cube.json');
+        gl_lab.resources.loadMesh(gl, 'data/meshes/textured_cube.json');
+
+        gl_lab.resources.wait(callback);
+    }
+
+
+    function createScene()
+    {
+        scene = new gl_lab.Scene();
+
+        var obj = gl_lab.mesh.instanciate(gl, 'cube1', gl_lab.resources.get('data/meshes/colored_cube.json'));
+        obj.transforms.setPosition([-4.0, 3.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+        scene.objects.push(obj);
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube2', gl_lab.resources.get('data/meshes/vertex_colored_cube.json'));
+        obj.transforms.setPosition([0.0, 3.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+        scene.objects.push(obj);
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube3', gl_lab.resources.get('data/meshes/textured_cube.json'));
+        obj.transforms.setPosition([4.0, 3.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+        scene.objects.push(obj);
+    }
+
+
+    function drawScene()
+    {
+        // Viewport initialisation
+        gl.viewport(camera.viewport.left, camera.viewport.top, camera.viewport.width,
+                    camera.viewport.height);
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+
+        // Compute the perspective matrix
+        var perspective_matrix = mat4.create();
+
+        mat4.perspective(perspective_matrix, degToRad(camera.fovy),
+                         camera.viewport.width / camera.viewport.height,
+                         camera.near, camera.far);
+
+        var camera_transforms = mat4.create();
+        mat4.invert(camera_transforms, camera.transforms.matrix);
+        mat4.multiply(perspective_matrix, perspective_matrix, camera_transforms);
+
+
+        // Draw the objects
+        for (var i = 0; i < scene.objects.length; ++i)
+        {
+            var obj = scene.objects[i];
+
+            for (var j = 0; j < obj.submeshes.length; ++j)
+            {
+                var submesh = obj.submeshes[j];
+
+                gl.useProgram(submesh.shader_program.program);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, submesh.vertex_buffer);
+                gl.vertexAttribPointer(submesh.shader_program.attributes.vertex_position,
+                                       submesh.vertex_buffer.itemSize,
+                                       gl.FLOAT, false, 0, 0);
+
+                if ((submesh.normal_buffer !== null) && (submesh.shader_program.attributes.normal >= 0))
+                {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, submesh.normal_buffer);
+                    gl.vertexAttribPointer(submesh.shader_program.attributes.normal,
+                                           submesh.normal_buffer.itemSize,
+                                           gl.FLOAT, false, 0, 0);
+                }
+
+                if ((submesh.texture_coordinates_buffer !== null) && (submesh.shader_program.attributes.texture_coordinates >= 0))
+                {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, submesh.texture_coordinates_buffer);
+                    gl.vertexAttribPointer(submesh.shader_program.attributes.texture_coordinates,
+                                           submesh.texture_coordinates_buffer.itemSize,
+                                           gl.FLOAT, false, 0, 0);
+                }
+
+                if ((submesh.color_buffer !== null) && (submesh.shader_program.attributes.vertex_color >= 0))
+                {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, submesh.color_buffer);
+                    gl.vertexAttribPointer(submesh.shader_program.attributes.vertex_color,
+                                           submesh.color_buffer.itemSize,
+                                           gl.FLOAT, false, 0, 0);
+                }
+
+                gl.uniformMatrix4fv(submesh.shader_program.uniforms.perspective_matrix, false, perspective_matrix);
+                gl.uniformMatrix4fv(submesh.shader_program.uniforms.model_view_matrix, false, obj.transforms.matrix);
+
+                if (submesh.shader_program.uniforms.diffuse_color !== null)
+                {
+                    gl.uniform4f(submesh.shader_program.uniforms.diffuse_color, submesh.material.diffuse_color.r,
+                                 submesh.material.diffuse_color.g, submesh.material.diffuse_color.b, 1.0);
+                }
+
+                if ((submesh.material.diffuse_texture !== null) && (submesh.shader_program.uniforms.diffuse_texture !== null))
+                {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, submesh.material.diffuse_texture);
+                    gl.uniform1i(submesh.shader_program.uniforms.diffuse_texture, 0);
+                }
+
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, submesh.index_buffer);
+                gl.drawElements(gl.TRIANGLES, submesh.index_buffer.numItems, gl.UNSIGNED_SHORT, 0);
+            }
+        }
+
+        requestAnimationFrame(function(timestamp) {
+            drawScene();
+        });
+    }
+
+
+    function start()
+    {
+        gl = gl_lab.init('webgl-canvas');
+        if (!gl)
+        {
+            alert('Failed to initialise WebGL');
+            return;
+        }
+
+        loadResources(function() {
+            camera = new gl_lab.Camera(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            camera.transforms.setPosition([0.0, 0.0, 3.0]);
+
+            createScene();
+
+            gl.clearColor(0.5, 0.5, 0.5, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+
+            drawScene();
+        });
+    }
+</script>
+
+</head>
+
+
+<body onload="start();">
+    <canvas id="webgl-canvas" style="border: none;" width="1000" height="500"></canvas>
+</body>
+
+</html>
