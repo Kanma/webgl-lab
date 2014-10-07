@@ -194,23 +194,9 @@ gl_lab.mesh.instanciate = function(gl, name, mesh)
             submesh.material.diffuse_texture = gl_lab.resources.get('data/textures/' + material_declaration.mapDiffuse);
 
         if (uvs === null)
-        {
-            if (colors === null)
-            {
-                submesh.shader_program = new gl_lab.ShaderProgram(gl, gl_lab.resources.get('data/shaders/no_texture_no_lighting.vs'),
-                                                                  gl_lab.resources.get('data/shaders/no_texture_no_lighting.fs'));
-            }
-            else
-            {
-                submesh.shader_program = new gl_lab.ShaderProgram(gl, gl_lab.resources.get('data/shaders/vertex_colors_no_lighting.vs'),
-                                                                  gl_lab.resources.get('data/shaders/vertex_colors_no_lighting.fs'));
-            }
-        }
+            submesh.setShaderProgram(gl, 'no_texture__no_lighting.vs', 'no_texture__no_lighting.fs');
         else
-        {
-            submesh.shader_program = new gl_lab.ShaderProgram(gl, gl_lab.resources.get('data/shaders/textured_no_lighting.vs'),
-                                                              gl_lab.resources.get('data/shaders/textured_no_lighting.fs'));
-        }
+            submesh.setShaderProgram(gl, 'textured__no_lighting.vs', 'textured__no_lighting.fs');
 
         submeshes.push(submesh);
     }

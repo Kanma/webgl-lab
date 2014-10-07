@@ -17,15 +17,70 @@ if (gl_lab === undefined)
 //----------------------------------------------------------------------------------------
 gl_lab.Transforms = function()
 {
-    this.matrix = mat4.create();
+    this.matrix   = mat4.create();
+    this.parent   = null;
+    this.children = [];
 }
 
 
-gl_lab.Transforms.prototype.setPosition = function(v)
+//----------------------------------------------------------------------------------------
+// Parent-child relationships
+//----------------------------------------------------------------------------------------
+gl_lab.Transforms.prototype.setParent = function(parent)
+{
+    if (this.parent)
+    {
+        var index = this.parent.children.indexOf(this);
+        this.parent.children.splice(index, 1);
+    }
+
+    if (parent)
+        parent.children.push(this);
+
+    this.parent = parent;
+}
+
+
+gl_lab.Transforms.prototype.setLocalPosition = function(v)
 {
     this.matrix[12] = v[0];
     this.matrix[13] = v[1];
     this.matrix[14] = v[2];
+}
+
+
+gl_lab.Transforms.prototype.localPosition = function()
+{
+    return vec3.clone([this.matrix[12], this.matrix[13], this.matrix[14]]);
+}
+
+
+gl_lab.Transforms.prototype.transformMatrix = function()
+{
+    if (this.parent)
+    {
+        var transformMatrix = mat4.create();
+        return mat4.multiply(transformMatrix, this.parent.transformMatrix(), this.matrix);
+    }
+    else
+    {
+        return mat4.clone(this.matrix);
+    }
+}
+
+
+gl_lab.Transforms.prototype.position = function()
+{
+    if (this.parent)
+    {
+        var position = vec3.create();
+        vec3.transformMat4(position, this.localPosition(), this.parent.transformMatrix());
+        return position;
+    }
+    else
+    {
+        return this.localPosition();
+    }
 }
 
 

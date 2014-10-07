@@ -24,3 +24,19 @@ gl_lab.SubMesh = function()
     this.shader_program             = null;
     this.material                   = new gl_lab.Material();
 }
+
+
+//----------------------------------------------------------------------------------------
+// Change the shader program used for the submesh
+//----------------------------------------------------------------------------------------
+gl_lab.SubMesh.prototype.setShaderProgram = function(gl, vertex_shader_name, fragment_shader_name)
+{
+    if (this.shader_program !== null)
+    {
+        this.shader_program.destroy(gl);
+        this.shader_program = null;
+    }
+
+    this.shader_program = new gl_lab.ShaderProgram(gl, gl_lab.resources.get('data/shaders/' + vertex_shader_name),
+                                                   gl_lab.resources.get('data/shaders/' + fragment_shader_name));
+}

@@ -10,6 +10,8 @@
 <script type="text/javascript" src="js/gl-lab.shaderprogram.js"></script>
 <script type="text/javascript" src="js/gl-lab.transforms.js"></script>
 <script type="text/javascript" src="js/gl-lab.color.js"></script>
+<script type="text/javascript" src="js/gl-lab.lights.directional.js"></script>
+<script type="text/javascript" src="js/gl-lab.lights.point.js"></script>
 <script type="text/javascript" src="js/gl-lab.material.js"></script>
 <script type="text/javascript" src="js/gl-lab.submesh.js"></script>
 <script type="text/javascript" src="js/gl-lab.mesh.js"></script>
@@ -34,12 +36,14 @@
     function loadResources(callback)
     {
         // Shaders
-        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture_no_lighting.vs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture_no_lighting.fs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors_no_lighting.vs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors_no_lighting.fs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/textured_no_lighting.vs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/textured_no_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__no_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__no_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_vertex_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_vertex_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.fs');
 
         // Textures
         gl_lab.resources.loadTexture(gl, 'data/textures/concrete_wall_A_diffuse.png');
@@ -60,19 +64,70 @@
     {
         scene = new gl_lab.Scene();
 
+        // scene.ambient_light_color = new gl_lab.RGBColor([0.0, 0.0, 0.0]);
+
+        scene.directional_light = new gl_lab.lights.DirectionalLight('dir_light1');
+        scene.directional_light.direction = vec3.clone([-1.0, -1.0, -1.0]);
+
+        var point_light = new gl_lab.lights.PointLight('point_light1');
+        point_light.transforms.setLocalPosition([6.0, 0.0, 0.0]);
+        scene.lights.push(point_light);
+
+        scene.point_light_manipulator = new gl_lab.Transforms();
+        scene.point_light_manipulator.setLocalPosition([0.0, -1.5, -10.0]);
+        point_light.transforms.setParent(scene.point_light_manipulator);
+
         var obj = gl_lab.mesh.instanciate(gl, 'cube1', gl_lab.resources.get('data/meshes/colored_cube.json'));
-        obj.transforms.setPosition([-4.0, 3.0, -10.0]);
+        obj.transforms.setLocalPosition([-4.0, 3.0, -10.0]);
         obj.transforms.rotateY(45.0);
         scene.objects.push(obj);
 
         obj = gl_lab.mesh.instanciate(gl, 'cube2', gl_lab.resources.get('data/meshes/vertex_colored_cube.json'));
-        obj.transforms.setPosition([0.0, 3.0, -10.0]);
-        obj.transforms.rotateY(45.0);
+        obj.transforms.setLocalPosition([0.0, 3.0, -10.0]);
+        obj.transforms.rotateY(135.0);
         scene.objects.push(obj);
 
         obj = gl_lab.mesh.instanciate(gl, 'cube3', gl_lab.resources.get('data/meshes/textured_cube.json'));
-        obj.transforms.setPosition([4.0, 3.0, -10.0]);
+        obj.transforms.setLocalPosition([4.0, 3.0, -10.0]);
         obj.transforms.rotateY(45.0);
+        scene.objects.push(obj);
+
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube4', gl_lab.resources.get('data/meshes/colored_cube.json'));
+        obj.transforms.setLocalPosition([-4.0, 0.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_vertex_lighting.vs',
+                                          'no_texture__per_vertex_lighting.fs');
+
+        scene.objects.push(obj);
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube5', gl_lab.resources.get('data/meshes/vertex_colored_cube.json'));
+        obj.transforms.setLocalPosition([0.0, 0.0, -10.0]);
+        obj.transforms.rotateY(135.0);
+
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_vertex_lighting.vs',
+                                          'no_texture__per_vertex_lighting.fs');
+
+        scene.objects.push(obj);
+
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube7', gl_lab.resources.get('data/meshes/colored_cube.json'));
+        obj.transforms.setLocalPosition([-4.0, -3.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_pixel_lighting.vs',
+                                          'no_texture__per_pixel_lighting.fs');
+
+        scene.objects.push(obj);
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube8', gl_lab.resources.get('data/meshes/vertex_colored_cube.json'));
+        obj.transforms.setLocalPosition([0.0, -3.0, -10.0]);
+        obj.transforms.rotateY(135.0);
+
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_pixel_lighting.vs',
+                                          'no_texture__per_pixel_lighting.fs');
+
         scene.objects.push(obj);
     }
 
@@ -109,15 +164,16 @@
 
                 gl.useProgram(submesh.shader_program.program);
 
+                // Attributes
                 gl.bindBuffer(gl.ARRAY_BUFFER, submesh.vertex_buffer);
                 gl.vertexAttribPointer(submesh.shader_program.attributes.vertex_position,
                                        submesh.vertex_buffer.itemSize,
                                        gl.FLOAT, false, 0, 0);
 
-                if ((submesh.normal_buffer !== null) && (submesh.shader_program.attributes.normal >= 0))
+                if ((submesh.normal_buffer !== null) && (submesh.shader_program.attributes.vertex_normal >= 0))
                 {
                     gl.bindBuffer(gl.ARRAY_BUFFER, submesh.normal_buffer);
-                    gl.vertexAttribPointer(submesh.shader_program.attributes.normal,
+                    gl.vertexAttribPointer(submesh.shader_program.attributes.vertex_normal,
                                            submesh.normal_buffer.itemSize,
                                            gl.FLOAT, false, 0, 0);
                 }
@@ -138,8 +194,91 @@
                                            gl.FLOAT, false, 0, 0);
                 }
 
+                // Uniforms - Transforms
                 gl.uniformMatrix4fv(submesh.shader_program.uniforms.perspective_matrix, false, perspective_matrix);
                 gl.uniformMatrix4fv(submesh.shader_program.uniforms.model_view_matrix, false, obj.transforms.matrix);
+
+                if (submesh.shader_program.uniforms.normals_matrix !== null)
+                {
+                    var normals_matrix = mat3.create();
+                    mat3.fromMat4(normals_matrix, obj.transforms.matrix);
+
+                    gl.uniformMatrix3fv(submesh.shader_program.uniforms.normals_matrix, false, normals_matrix);
+                }
+
+                // Uniforms - Lighting
+                if (submesh.shader_program.uniforms.ambient_light_color !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.ambient_light_color,
+                                  scene.ambient_light_color.data);
+                }
+
+                if (submesh.shader_program.uniforms.directional_light_direction !== null)
+                {
+                    var adjusted_direction = null;
+
+                    if (scene.directional_light !== null)
+                    {
+                        adjusted_direction = vec3.create();
+                        vec3.normalize(adjusted_direction, scene.directional_light.direction);
+                        vec3.scale(adjusted_direction, adjusted_direction, -1.0);
+                    }
+                    else
+                    {
+                        adjusted_direction = vec3.clone([0.0, -1.0, 0.0]);
+                    }
+
+                    gl.uniform3fv(submesh.shader_program.uniforms.directional_light_direction,
+                                  adjusted_direction);
+                }
+
+                if (submesh.shader_program.uniforms.directional_light_color !== null)
+                {
+                    var color = null
+ 
+                    if (scene.directional_light !== null)
+                        color = scene.directional_light.color.data;
+                    else
+                        color = vec3.clone([0.0, 0.0, 0.0]);
+ 
+                    gl.uniform3fv(submesh.shader_program.uniforms.directional_light_color, color);
+                }
+
+                if (submesh.shader_program.uniforms.point_light_position !== null)
+                {
+                    var point_light = (scene.lights.length > 0 ? scene.lights[0] : null);
+
+                    var position = null;
+
+                    if (point_light !== null)
+                        position = point_light.transforms.position();
+                    else
+                        position = vec3.create();
+
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_position,
+                                  position);
+                }
+
+                if (submesh.shader_program.uniforms.point_light_color !== null)
+                {
+                    var point_light = (scene.lights.length > 0 ? scene.lights[0] : null);
+
+                    var color = null
+ 
+                    if (point_light !== null)
+                        color = point_light.color.data;
+                    else
+                        color = vec3.clone([0.0, 0.0, 0.0]);
+ 
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_color, color);
+                }
+
+                // Uniforms - Material
+                if (submesh.shader_program.uniforms.ambient_color !== null)
+                {
+                    gl.uniform4f(submesh.shader_program.uniforms.ambient_color, submesh.material.ambient_color.r,
+                                 submesh.material.ambient_color.g, submesh.material.ambient_color.b, 1.0);
+                }
 
                 if (submesh.shader_program.uniforms.diffuse_color !== null)
                 {
@@ -154,12 +293,36 @@
                     gl.uniform1i(submesh.shader_program.uniforms.diffuse_texture, 0);
                 }
 
+                // Uniforms - Flags
+                if (submesh.shader_program.uniforms.use_vertex_colors !== null)
+                {
+                    var use_vertex_colors = (submesh.color_buffer !== null) &&
+                                            (submesh.shader_program.attributes.vertex_color >= 0);
+
+                    gl.uniform1i(submesh.shader_program.uniforms.use_vertex_colors, use_vertex_colors);
+                }
+
+                // Indices
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, submesh.index_buffer);
                 gl.drawElements(gl.TRIANGLES, submesh.index_buffer.numItems, gl.UNSIGNED_SHORT, 0);
             }
         }
 
         requestAnimationFrame(function(timestamp) {
+            // var q = quat.create();
+            // quat.setAxisAngle(q, vec3.clone([0.0, 1.0, 0.0]), degToRad(1.0));
+            //
+            // var m = mat3.create();
+            // mat3.fromQuat(m, q);
+
+            // mat3.multiply(scene.directional_light.direction, m, scene.directional_light.direction);
+
+            // var point_light = scene.lights[0];
+
+            // mat3.multiply(point_light.transforms.matrix, m, point_light.transforms.matrix);
+
+            scene.point_light_manipulator.rotateY(1.0);
+
             drawScene();
         });
     }
@@ -176,7 +339,7 @@
 
         loadResources(function() {
             camera = new gl_lab.Camera(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            camera.transforms.setPosition([0.0, 0.0, 3.0]);
+            camera.transforms.setLocalPosition([0.0, 0.0, 3.0]);
 
             createScene();
 
