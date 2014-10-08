@@ -22,9 +22,10 @@
 
 <script type="text/javascript">
 
-    var gl      = null;
-    var camera  = null;
-    var scene   = null;
+    var gl                   = null;
+    var camera               = null;
+    var scene                = null;
+    var rendering_timestamps = [];
 
 
     function degToRad(degrees)
@@ -44,6 +45,10 @@
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_vertex_lighting.fs');
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.vs');
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_vertex_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_vertex_lighting.fs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_pixel_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_pixel_lighting.fs');
 
         // Textures
         gl_lab.resources.loadTexture(gl, 'data/textures/concrete_wall_A_diffuse.png');
@@ -111,6 +116,15 @@
 
         scene.objects.push(obj);
 
+        obj = gl_lab.mesh.instanciate(gl, 'cube6', gl_lab.resources.get('data/meshes/textured_cube.json'));
+        obj.transforms.setLocalPosition([4.0, 0.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+
+        obj.submeshes[0].setShaderProgram(gl, 'textured__per_vertex_lighting.vs',
+                                          'textured__per_vertex_lighting.fs');
+
+        scene.objects.push(obj);
+
 
         obj = gl_lab.mesh.instanciate(gl, 'cube7', gl_lab.resources.get('data/meshes/colored_cube.json'));
         obj.transforms.setLocalPosition([-4.0, -3.0, -10.0]);
@@ -127,6 +141,15 @@
 
         obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_pixel_lighting.vs',
                                           'no_texture__per_pixel_lighting.fs');
+
+        scene.objects.push(obj);
+
+        obj = gl_lab.mesh.instanciate(gl, 'cube9', gl_lab.resources.get('data/meshes/textured_cube.json'));
+        obj.transforms.setLocalPosition([4.0, -3.0, -10.0]);
+        obj.transforms.rotateY(45.0);
+
+        obj.submeshes[0].setShaderProgram(gl, 'textured__per_pixel_lighting.vs',
+                                          'textured__per_pixel_lighting.fs');
 
         scene.objects.push(obj);
     }
@@ -309,17 +332,15 @@
         }
 
         requestAnimationFrame(function(timestamp) {
-            // var q = quat.create();
-            // quat.setAxisAngle(q, vec3.clone([0.0, 1.0, 0.0]), degToRad(1.0));
-            //
-            // var m = mat3.create();
-            // mat3.fromQuat(m, q);
+            rendering_timestamps.push(timestamp);
 
-            // mat3.multiply(scene.directional_light.direction, m, scene.directional_light.direction);
+            if (timestamp - rendering_timestamps[0] >= 1000)
+            {
+                $('#fps').text(Math.round(rendering_timestamps.length * 1000.0 / (timestamp - rendering_timestamps[0])) + ' FPS');
 
-            // var point_light = scene.lights[0];
+                rendering_timestamps.splice(0, 1);
+            }
 
-            // mat3.multiply(point_light.transforms.matrix, m, point_light.transforms.matrix);
 
             scene.point_light_manipulator.rotateY(1.0);
 
@@ -356,6 +377,9 @@
 
 <body onload="start();">
     <canvas id="webgl-canvas" style="border: none;" width="1000" height="500"></canvas>
+    <div>
+        <span id="fps"></span>
+    </div>
 </body>
 
 </html>
