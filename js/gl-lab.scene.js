@@ -20,6 +20,8 @@ gl_lab.Scene = function()
     this.objects = [];
     this.lights  = [];
 
+    this.camera  = null;
+
     this.ambient_light_color = new gl_lab.RGBColor([0.5, 0.5, 0.5]);
     this.directional_light   = null;
 }
