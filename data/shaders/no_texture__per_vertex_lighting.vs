@@ -1,8 +1,6 @@
 //----------------------------------------------------------------------------------------
 // Rendering of an untextured object, with per-vertex lighting
 //
-// NOTE: no specular component yet
-//
 // Setup:
 //   - Ambient light
 //   - 1 directional light
@@ -20,15 +18,18 @@ uniform mat3 normals_matrix;
 uniform mat4 perspective_matrix;
 
 // Material
-uniform vec4 ambient_color;
-uniform vec4 diffuse_color;
+uniform vec4  ambient_color;
+uniform vec4  diffuse_color;
+uniform vec4  specular_color;
+uniform float specular_coefficient;
 
 // Lighting
 uniform vec3 ambient_light_color;
 uniform vec3 directional_light_direction;
 uniform vec3 directional_light_color;
 uniform vec3 point_light_position;
-uniform vec3 point_light_color;
+uniform vec3 point_light_diffuse_color;
+uniform vec3 point_light_specular_color;
 
 // Outputs
 varying vec4 processed_diffuse_color;
@@ -48,13 +49,20 @@ void main(void)
     vec4 vertex_diffuse_color;
 
     vertex_diffuse_color = diffuse_color;
-    ambient_intensity = vec4(ambient_light_color, 1.0) * ambient_color;
 
+    ambient_intensity = vec4(ambient_light_color, 1.0) * ambient_color;
 
     vec4 diffuse_intensity = vec4(directional_light_color, 1.0) * vertex_diffuse_color *
                              max(dot(transformed_normal, directional_light_direction), 0.0) +
-                             vec4(point_light_color, 1.0) * vertex_diffuse_color *
+                             vec4(point_light_diffuse_color, 1.0) * vertex_diffuse_color *
                              max(dot(transformed_normal, light_direction), 0.0);
 
-    processed_diffuse_color = ambient_intensity + diffuse_intensity;
+    vec3 eye_direction = normalize(-vertex_position.xyz);
+
+    vec3 reflection_direction = reflect(-light_direction, transformed_normal);
+
+    vec4 specular_intensity = pow(max(dot(reflection_direction, eye_direction), 0.0), specular_coefficient) *
+                              vec4(point_light_specular_color, 1.0) * specular_color;
+
+    processed_diffuse_color = ambient_intensity + diffuse_intensity + specular_intensity;
 }

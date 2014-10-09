@@ -185,10 +185,11 @@ gl_lab.mesh.instanciate = function(gl, name, mesh)
         // Parse the material declaration
         var material_declaration = mesh.materials[material_index];
 
-        submesh.material.ambient_color  = new gl_lab.RGBColor(material_declaration.colorAmbient);
-        submesh.material.diffuse_color  = new gl_lab.RGBColor(material_declaration.colorDiffuse);
-        submesh.material.emissive_color = new gl_lab.RGBColor(material_declaration.colorEmissive);
-        submesh.material.specular_color = new gl_lab.RGBColor(material_declaration.colorSpecular);
+        submesh.material.ambient_color        = new gl_lab.RGBColor(material_declaration.colorAmbient);
+        submesh.material.diffuse_color        = new gl_lab.RGBColor(material_declaration.colorDiffuse);
+        submesh.material.emissive_color       = new gl_lab.RGBColor(material_declaration.colorEmissive);
+        submesh.material.specular_color       = new gl_lab.RGBColor(material_declaration.colorSpecular);
+        submesh.material.specular_coefficient = material_declaration.specularCoef;
 
         if (material_declaration.mapDiffuse !== undefined)
             submesh.material.diffuse_texture = gl_lab.resources.get('data/textures/' + material_declaration.mapDiffuse);

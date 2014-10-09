@@ -38,12 +38,15 @@ gl_lab.ShaderProgram = function(gl, vertex_shader, fragment_shader)
         directional_light_direction: null,
         directional_light_color:     null,
         point_light_position:        null,
-        point_light_color:           null,
+        point_light_diffuse_color:   null,
+        point_light_specular_color:  null,
 
         // Material
-        ambient_color:       null, 
-        diffuse_color:       null,
-        diffuse_texture:     null,
+        ambient_color:        null, 
+        diffuse_color:        null,
+        specular_color:       null,
+        specular_coefficient: null,
+        diffuse_texture:      null,
     };
 
 
@@ -90,10 +93,13 @@ gl_lab.ShaderProgram = function(gl, vertex_shader, fragment_shader)
     this.uniforms.directional_light_direction = gl.getUniformLocation(this.program, 'directional_light_direction');
     this.uniforms.directional_light_color     = gl.getUniformLocation(this.program, 'directional_light_color');
     this.uniforms.point_light_position        = gl.getUniformLocation(this.program, 'point_light_position');
-    this.uniforms.point_light_color           = gl.getUniformLocation(this.program, 'point_light_color');
+    this.uniforms.point_light_diffuse_color   = gl.getUniformLocation(this.program, 'point_light_diffuse_color');
+    this.uniforms.point_light_specular_color  = gl.getUniformLocation(this.program, 'point_light_specular_color');
 
     this.uniforms.ambient_color               = gl.getUniformLocation(this.program, 'ambient_color');
     this.uniforms.diffuse_color               = gl.getUniformLocation(this.program, 'diffuse_color');
+    this.uniforms.specular_color              = gl.getUniformLocation(this.program, 'specular_color');
+    this.uniforms.specular_coefficient        = gl.getUniformLocation(this.program, 'specular_coefficient');
     this.uniforms.diffuse_texture             = gl.getUniformLocation(this.program, 'diffuse_texture');
 }
 

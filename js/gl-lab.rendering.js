@@ -127,33 +127,47 @@ gl_lab.rendering.render = function(gl, scene)
                 gl.uniform3fv(submesh.shader_program.uniforms.directional_light_color, color);
             }
 
-            if (submesh.shader_program.uniforms.point_light_position !== null)
+            var point_light = (scene.lights.length > 0 ? scene.lights[0] : null);
+
+            if (point_light)
             {
-                var point_light = (scene.lights.length > 0 ? scene.lights[0] : null);
+                if (submesh.shader_program.uniforms.point_light_position !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_position,
+                                  point_light.transforms.position());
+                }
 
-                var position = null;
+                if (submesh.shader_program.uniforms.point_light_diffuse_color !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_diffuse_color,
+                                  point_light.diffuse_color.data);
+                }
 
-                if (point_light !== null)
-                    position = point_light.transforms.position();
-                else
-                    position = vec3.create();
-
-                gl.uniform3fv(submesh.shader_program.uniforms.point_light_position,
-                              position);
+                if (submesh.shader_program.uniforms.point_light_specular_color !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_specular_color,
+                                  point_light.specular_color.data);
+                }
             }
-
-            if (submesh.shader_program.uniforms.point_light_color !== null)
+            else
             {
-                var point_light = (scene.lights.length > 0 ? scene.lights[0] : null);
+                if (submesh.shader_program.uniforms.point_light_position !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_position,
+                                  vec3.create());
+                }
 
-                var color = null
+                if (submesh.shader_program.uniforms.point_light_diffuse_color !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_diffuse_color,
+                                  vec3.clone([0.0, 0.0, 0.0]));
+                }
 
-                if (point_light !== null)
-                    color = point_light.color.data;
-                else
-                    color = vec3.clone([0.0, 0.0, 0.0]);
-
-                gl.uniform3fv(submesh.shader_program.uniforms.point_light_color, color);
+                if (submesh.shader_program.uniforms.point_light_specular_color !== null)
+                {
+                    gl.uniform3fv(submesh.shader_program.uniforms.point_light_specular_color,
+                                  vec3.clone([0.0, 0.0, 0.0]));
+                }
             }
 
             // Uniforms - Material
@@ -168,6 +182,15 @@ gl_lab.rendering.render = function(gl, scene)
                 gl.uniform4f(submesh.shader_program.uniforms.diffuse_color, submesh.material.diffuse_color.r,
                              submesh.material.diffuse_color.g, submesh.material.diffuse_color.b, 1.0);
             }
+
+            if (submesh.shader_program.uniforms.specular_color !== null)
+            {
+                gl.uniform4f(submesh.shader_program.uniforms.specular_color, submesh.material.specular_color.r,
+                             submesh.material.specular_color.g, submesh.material.specular_color.b, 1.0);
+            }
+
+            if (submesh.shader_program.uniforms.specular_coefficient !== null)
+                gl.uniform1f(submesh.shader_program.uniforms.specular_coefficient, submesh.material.specular_coefficient);
 
             if ((submesh.material.diffuse_texture !== null) && (submesh.shader_program.uniforms.diffuse_texture !== null))
             {

@@ -10,7 +10,12 @@ precision mediump float;
 uniform vec3 directional_light_direction;
 uniform vec3 directional_light_color;
 uniform vec3 point_light_position;
-uniform vec3 point_light_color;
+uniform vec3 point_light_diffuse_color;
+uniform vec3 point_light_specular_color;
+
+// Material
+uniform vec4  specular_color;
+uniform float specular_coefficient;
 
 // Inputs
 varying vec4 processed_position;
@@ -25,8 +30,15 @@ void main(void)
 
     vec4 diffuse_intensity = vec4(directional_light_color, 1.0) * processed_diffuse_color *
                              max(dot(processed_normal, directional_light_direction), 0.0) +
-                             vec4(point_light_color, 1.0) * processed_diffuse_color *
+                             vec4(point_light_diffuse_color, 1.0) * processed_diffuse_color *
                              max(dot(processed_normal, light_direction), 0.0);
 
-    gl_FragColor = processed_ambient_intensity + diffuse_intensity;
+    vec3 eye_direction = normalize(-processed_position.xyz);
+
+    vec3 reflection_direction = reflect(-light_direction, processed_normal);
+
+    vec4 specular_intensity = pow(max(dot(reflection_direction, eye_direction), 0.0), specular_coefficient) *
+                              vec4(point_light_specular_color, 1.0) * specular_color;
+
+    gl_FragColor = processed_ambient_intensity + diffuse_intensity + specular_intensity;
 }
