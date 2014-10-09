@@ -44,9 +44,6 @@ gl_lab.ShaderProgram = function(gl, vertex_shader, fragment_shader)
         ambient_color:       null, 
         diffuse_color:       null,
         diffuse_texture:     null,
-
-        // Flags
-        use_vertex_colors:   null, 
     };
 
 
@@ -98,8 +95,6 @@ gl_lab.ShaderProgram = function(gl, vertex_shader, fragment_shader)
     this.uniforms.ambient_color               = gl.getUniformLocation(this.program, 'ambient_color');
     this.uniforms.diffuse_color               = gl.getUniformLocation(this.program, 'diffuse_color');
     this.uniforms.diffuse_texture             = gl.getUniformLocation(this.program, 'diffuse_texture');
-
-    this.uniforms.use_vertex_colors           = gl.getUniformLocation(this.program, 'use_vertex_colors');
 }
 
 

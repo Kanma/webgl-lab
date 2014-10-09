@@ -193,10 +193,17 @@ gl_lab.mesh.instanciate = function(gl, name, mesh)
         if (material_declaration.mapDiffuse !== undefined)
             submesh.material.diffuse_texture = gl_lab.resources.get('data/textures/' + material_declaration.mapDiffuse);
 
-        if (uvs === null)
-            submesh.setShaderProgram(gl, 'no_texture__no_lighting.vs', 'no_texture__no_lighting.fs');
+        if (!uvs)
+        {
+            if (colors)
+                submesh.setShaderProgram(gl, 'vertex_colors__no_lighting.vs', 'simple.fs');
+            else
+                submesh.setShaderProgram(gl, 'no_texture__no_lighting.vs', 'simple.fs');
+        }
         else
+        {
             submesh.setShaderProgram(gl, 'textured__no_lighting.vs', 'textured__no_lighting.fs');
+        }
 
         submeshes.push(submesh);
     }

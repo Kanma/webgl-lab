@@ -5,6 +5,7 @@
 
 <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="js/gl-matrix-min.js"></script>
+<script type="text/javascript" src="js/gl-lab.utils.js"></script>
 <script type="text/javascript" src="js/gl-lab.js"></script>
 <script type="text/javascript" src="js/gl-lab.resources.js"></script>
 <script type="text/javascript" src="js/gl-lab.shaderprogram.js"></script>
@@ -37,22 +38,26 @@
     function loadResources(callback)
     {
         // Shaders
+        gl_lab.resources.loadShader(gl, 'data/shaders/simple.fs');
+
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__no_lighting.vs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__no_lighting.fs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/textured__no_lighting.vs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/textured__no_lighting.fs');
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_vertex_lighting.vs');
-        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_vertex_lighting.fs');
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.vs');
         gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.fs');
+
+        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors__no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors__per_vertex_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors__per_pixel_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/vertex_colors__per_pixel_lighting.fs');
+
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/textured__no_lighting.fs');
         gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_vertex_lighting.vs');
         gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_vertex_lighting.fs');
         gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_pixel_lighting.vs');
         gl_lab.resources.loadShader(gl, 'data/shaders/textured__per_pixel_lighting.fs');
 
         // Textures
-        gl_lab.resources.loadTexture(gl, 'data/textures/concrete_wall_A_diffuse.png');
-        gl_lab.resources.loadTexture(gl, 'data/textures/concrete_wall_A_normal.png');
         gl_lab.resources.loadTexture(gl, 'data/textures/wooden_box_diffuse.png');
         gl_lab.resources.loadTexture(gl, 'data/textures/wooden_box_normal.png');
 
@@ -107,8 +112,7 @@
         obj.transforms.setLocalPosition([-4.0, 0.0, -10.0]);
         obj.transforms.rotateY(45.0);
 
-        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_vertex_lighting.vs',
-                                          'no_texture__per_vertex_lighting.fs');
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_vertex_lighting.vs', 'simple.fs');
 
         scene.objects.push(obj);
 
@@ -116,8 +120,7 @@
         obj.transforms.setLocalPosition([0.0, 0.0, -10.0]);
         obj.transforms.rotateY(135.0);
 
-        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_vertex_lighting.vs',
-                                          'no_texture__per_vertex_lighting.fs');
+        obj.submeshes[0].setShaderProgram(gl, 'vertex_colors__per_vertex_lighting.vs', 'simple.fs');
 
         scene.objects.push(obj);
 
@@ -144,8 +147,8 @@
         obj.transforms.setLocalPosition([0.0, -3.0, -10.0]);
         obj.transforms.rotateY(135.0);
 
-        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_pixel_lighting.vs',
-                                          'no_texture__per_pixel_lighting.fs');
+        obj.submeshes[0].setShaderProgram(gl, 'vertex_colors__per_pixel_lighting.vs',
+                                          'vertex_colors__per_pixel_lighting.fs');
 
         scene.objects.push(obj);
 

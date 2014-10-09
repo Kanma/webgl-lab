@@ -1,0 +1,135 @@
+<html>
+
+<head>
+<title>WebGL Lab - Bump mapping</title>
+
+<script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="js/gl-matrix-min.js"></script>
+<script type="text/javascript" src="js/gl-lab.utils.js"></script>
+<script type="text/javascript" src="js/gl-lab.js"></script>
+<script type="text/javascript" src="js/gl-lab.resources.js"></script>
+<script type="text/javascript" src="js/gl-lab.shaderprogram.js"></script>
+<script type="text/javascript" src="js/gl-lab.transforms.js"></script>
+<script type="text/javascript" src="js/gl-lab.color.js"></script>
+<script type="text/javascript" src="js/gl-lab.lights.directional.js"></script>
+<script type="text/javascript" src="js/gl-lab.lights.point.js"></script>
+<script type="text/javascript" src="js/gl-lab.material.js"></script>
+<script type="text/javascript" src="js/gl-lab.submesh.js"></script>
+<script type="text/javascript" src="js/gl-lab.mesh.js"></script>
+<script type="text/javascript" src="js/gl-lab.camera.js"></script>
+<script type="text/javascript" src="js/gl-lab.object.js"></script>
+<script type="text/javascript" src="js/gl-lab.scene.js"></script>
+<script type="text/javascript" src="js/gl-lab.rendering.js"></script>
+
+
+<script type="text/javascript">
+
+    var gl                   = null;
+    var scene                = null;
+    var rendering_timestamps = [];
+
+
+    function degToRad(degrees)
+    {
+        return degrees * Math.PI / 180;
+    }
+
+
+    function loadResources(callback)
+    {
+        // Shaders
+        gl_lab.resources.loadShader(gl, 'data/shaders/simple.fs');
+
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__no_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_vertex_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.vs');
+        gl_lab.resources.loadShader(gl, 'data/shaders/no_texture__per_pixel_lighting.fs');
+
+        // Meshes
+        gl_lab.resources.loadMesh(gl, 'data/meshes/colored_sphere.json');
+
+        gl_lab.resources.wait(callback);
+    }
+
+
+    function createScene()
+    {
+        scene = new gl_lab.Scene();
+
+        scene.camera = new gl_lab.Camera(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        scene.camera.transforms.setLocalPosition([0.0, 0.0, 3.0]);
+
+        // scene.ambient_light_color = new gl_lab.RGBColor([0.0, 0.0, 0.0]);
+
+        var point_light = new gl_lab.lights.PointLight('point_light1');
+        point_light.transforms.setLocalPosition([0.0, 0.0, 1.0]);
+        scene.lights.push(point_light);
+
+
+        var obj = gl_lab.mesh.instanciate(gl, 'sphere1', gl_lab.resources.get('data/meshes/colored_sphere.json'));
+        obj.transforms.setLocalPosition([-1.5, 0.0, 0.0]);
+        scene.objects.push(obj);
+
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_vertex_lighting.vs', 'simple.fs');
+
+
+        obj = gl_lab.mesh.instanciate(gl, 'sphere2', gl_lab.resources.get('data/meshes/colored_sphere.json'));
+        obj.transforms.setLocalPosition([1.5, 0.0, 0.0]);
+        scene.objects.push(obj);
+
+        obj.submeshes[0].setShaderProgram(gl, 'no_texture__per_pixel_lighting.vs',
+                                          'no_texture__per_pixel_lighting.fs');
+    }
+
+
+    function drawScene()
+    {
+        gl_lab.rendering.render(gl, scene);
+
+
+        requestAnimationFrame(function(timestamp) {
+            rendering_timestamps.push(timestamp);
+
+            if (timestamp - rendering_timestamps[0] >= 1000)
+            {
+                $('#fps').text(Math.round(rendering_timestamps.length * 1000.0 / (timestamp - rendering_timestamps[0])) + ' FPS');
+
+                rendering_timestamps.splice(0, 1);
+            }
+
+            drawScene();
+        });
+    }
+
+
+    function start()
+    {
+        gl = gl_lab.init('webgl-canvas');
+        if (!gl)
+        {
+            alert('Failed to initialise WebGL');
+            return;
+        }
+
+        loadResources(function() {
+            createScene();
+
+            gl.clearColor(0.5, 0.5, 0.5, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+
+            drawScene();
+        });
+    }
+</script>
+
+</head>
+
+
+<body onload="start();">
+    <canvas id="webgl-canvas" style="border: none;" width="1000" height="500"></canvas>
+    <div>
+        <span id="fps"></span>
+    </div>
+</body>
+
+</html>

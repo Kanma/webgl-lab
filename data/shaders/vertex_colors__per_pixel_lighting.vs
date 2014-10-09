@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------
-// Rendering of an untextured object, with per-pixel lighting
+// Rendering of a vertex colored object, with per-pixel lighting
 //
 // NOTE: no specular component yet
 //
@@ -7,21 +7,18 @@
 //   - Ambient light
 //   - 1 directional light
 //   - 1 point light
-//   - No texture
+//   - Vertex colors
 //----------------------------------------------------------------------------------------
 
 // Per-vertex inputs
 attribute vec3 in_vertex_position;
 attribute vec3 in_vertex_normal;
+attribute vec3 in_vertex_color;
 
 // Transforms
 uniform mat4 model_view_matrix;
 uniform mat3 normals_matrix;
 uniform mat4 perspective_matrix;
-
-// Material
-uniform vec4 ambient_color;
-uniform vec4 diffuse_color;
 
 // Lighting
 uniform vec3 ambient_light_color;
@@ -41,7 +38,7 @@ void main(void)
 
     processed_normal = normals_matrix * in_vertex_normal;
 
-    processed_diffuse_color = diffuse_color;
+    processed_diffuse_color = vec4(in_vertex_color, 1.0);
 
-    processed_ambient_intensity = vec4(ambient_light_color, 1.0) * ambient_color;
+    processed_ambient_intensity = vec4(ambient_light_color, 1.0) * processed_diffuse_color;
 }

@@ -79,7 +79,7 @@ gl_lab.rendering.render = function(gl, scene)
 
             // Uniforms - Transforms
             gl.uniformMatrix4fv(submesh.shader_program.uniforms.perspective_matrix, false, perspective_matrix);
-            gl.uniformMatrix4fv(submesh.shader_program.uniforms.model_view_matrix, false, obj.transforms.matrix);
+            gl.uniformMatrix4fv(submesh.shader_program.uniforms.model_view_matrix, false, obj.transforms.transformMatrix());
 
             if (submesh.shader_program.uniforms.normals_matrix !== null)
             {
@@ -174,15 +174,6 @@ gl_lab.rendering.render = function(gl, scene)
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, submesh.material.diffuse_texture);
                 gl.uniform1i(submesh.shader_program.uniforms.diffuse_texture, 0);
-            }
-
-            // Uniforms - Flags
-            if (submesh.shader_program.uniforms.use_vertex_colors !== null)
-            {
-                var use_vertex_colors = (submesh.color_buffer !== null) &&
-                                        (submesh.shader_program.attributes.vertex_color >= 0);
-
-                gl.uniform1i(submesh.shader_program.uniforms.use_vertex_colors, use_vertex_colors);
             }
 
             // Indices
